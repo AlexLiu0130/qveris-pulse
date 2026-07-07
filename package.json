@@ -1,0 +1,19 @@
+{
+  "name": "qveris-pulse",
+  "version": "0.1.0",
+  "private": false,
+  "description": "A local-first QVeris-powered market pulse dashboard for watchlist-driven US equity daily reports.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check app/app.js"
+  },
+  "keywords": [
+    "qveris",
+    "finance",
+    "watchlist",
+    "market-dashboard",
+    "daily-report"
+  ],
+  "license": "MIT"
+}

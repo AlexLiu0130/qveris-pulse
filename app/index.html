@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QVeris 金融日报</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand">
+        <span class="mark">Q</span>
+        <div class="brand-name">
+          <strong>QVeris Pulse</strong>
+          <small>晨间投研台</small>
+        </div>
+      </div>
+      <nav aria-label="板块导航">
+        <a class="active" href="#market"><span class="nav-index">01</span>市场</a>
+        <a href="#sectors"><span class="nav-index">02</span>板块与宏观</a>
+        <a href="#movers"><span class="nav-index">03</span>异动</a>
+        <a href="#watchlist"><span class="nav-index">04</span>自选股</a>
+        <a href="#earnings"><span class="nav-index">05</span>财报</a>
+        <a href="#judgment"><span class="nav-index">06</span>判断</a>
+        <a href="#focus"><span class="nav-index">07</span>关注</a>
+        <a href="#detail"><span class="nav-index">08</span>个股详情</a>
+      </nav>
+      <div class="rail-foot">
+        <p class="rail-note">本日报只提供信息摘要和研究线索，不构成投资建议。</p>
+        <p class="rail-version">本地原型 · v0.4</p>
+      </div>
+    </aside>
+
+    <main>
+      <header class="masthead" id="market">
+        <div class="masthead-meta">
+          <p class="eyebrow">QVeris 金融日报 · <span id="asOfDate" class="mono">加载中</span></p>
+          <form id="searchForm" class="search" role="search">
+            <input id="tickerSearch" placeholder="查询任意股票代码，如 NVDA" autocomplete="off" aria-label="搜索股票代码">
+            <button type="submit">查看</button>
+          </form>
+        </div>
+        <h1 id="headline">正在生成今日日报…</h1>
+        <p id="marketNote" class="market-note" hidden></p>
+        <div id="signalStrip" class="signal-strip" aria-label="今日信号"></div>
+      </header>
+
+      <section class="grid two-one">
+        <article class="panel">
+          <div class="panel-head">
+            <h2><span class="index">01</span>市场概览</h2>
+            <span id="riskPill" class="pill" hidden></span>
+          </div>
+          <div id="assetGrid" class="asset-grid">
+            <p class="empty-state">正在加载市场数据…</p>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-head">
+            <h2>量能与风险偏好</h2>
+          </div>
+          <div id="breadth" class="signal-stack">
+            <p class="empty-state">数据暂缺</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="grid two-one" id="sectors">
+        <article class="panel">
+          <div class="panel-head">
+            <h2><span class="index">02</span>板块资金流向</h2>
+            <span class="muted">全部板块 · 按涨跌幅排序</span>
+          </div>
+          <div id="sectorGrid" class="sector-list">
+            <p class="empty-state">数据暂缺</p>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-head">
+            <h2>宏观与利率</h2>
+            <span class="muted">QVeris 宏观数据</span>
+          </div>
+          <div id="macroList" class="signal-stack">
+            <p class="empty-state">数据暂缺</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel" id="movers">
+        <div class="panel-head">
+          <h2><span class="index">03</span>今日明星个股</h2>
+          <span class="muted">按异动幅度与量能排序</span>
+        </div>
+        <div id="moversGrid" class="pair-grid movers-grid">
+          <p class="empty-state">数据暂缺</p>
+        </div>
+      </section>
+
+      <section class="panel" id="watchlist">
+        <div class="panel-head">
+          <h2><span class="index">04</span>自选股专区</h2>
+          <span id="watchCount" class="muted mono"></span>
+        </div>
+        <form id="addForm" class="add-row">
+          <input id="addTicker" placeholder="股票代码" aria-label="股票代码" maxlength="8">
+          <input id="addThesis" placeholder="关注理由，可选" aria-label="关注理由">
+          <button type="submit">加入</button>
+        </form>
+        <div id="watchlistRows" class="watchlist"></div>
+      </section>
+
+      <section class="panel" id="earnings">
+        <div class="panel-head">
+          <h2><span class="index">05</span>未来 45 天财报</h2>
+          <span class="muted">自选股优先 · QVeris 财报日历</span>
+        </div>
+        <div id="earningsList" class="earnings-list">
+          <p class="empty-state">未来 45 天暂缺自选股财报</p>
+        </div>
+      </section>
+
+      <section class="panel judgment-panel" id="judgment">
+        <div class="panel-head">
+          <h2><span class="index">06</span>QVeris 判断</h2>
+          <span class="muted">由结构化行情、披露、财报、评级、宏观数据聚合生成</span>
+        </div>
+        <div id="judgmentBody" class="judgment">
+          <p class="empty-state">数据暂缺</p>
+        </div>
+      </section>
+
+      <section class="panel" id="focus">
+        <div class="panel-head">
+          <h2><span class="index">07</span>今日关注清单</h2>
+          <span class="muted">把日报变成可复核任务</span>
+        </div>
+        <div id="focusList" class="focus-list">
+          <p class="empty-state">暂无关注项</p>
+        </div>
+      </section>
+
+      <section class="panel detail-panel" id="detail">
+        <div class="panel-head">
+          <div>
+            <h2 id="detailTitle"><span class="index">08</span>个股详情</h2>
+            <p id="detailSubtitle" class="muted">搜索或点击任意股票代码查看，不必加入自选股。</p>
+          </div>
+          <button id="detailAddBtn" type="button">加入自选股</button>
+        </div>
+        <div class="detail-grid">
+          <div class="chart-wrap">
+            <div id="trendChart" role="img" aria-label="日 K 线图"></div>
+            <p class="chart-caption muted">日 K · <span id="chartSource">数据暂缺</span></p>
+          </div>
+          <div id="detailFacts" class="facts"></div>
+        </div>
+      </section>
+
+      <footer class="colophon">
+        <span>QVeris 金融日报 · 本日报只提供信息摘要和研究线索，不构成投资建议</span>
+        <span>截至 <span id="colophonDate" class="mono">—</span> 美股收盘</span>
+        <span>数据源：QVeris 行情、财报、评级、宏观、公开披露、历史行情</span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
