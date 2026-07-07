@@ -393,6 +393,7 @@ function dailySignal(t, item = {}) {
   else if (strongVolume) why.push("价格变化不一定大，但量能放大，说明有资金参与，适合检查是否有事件驱动。");
   else if (quietPrice) why.push("价格和量能都不强，今天它不是优先级最高的异动标的。");
   if (filing) why.push(filingMeaning(filing.form));
+  if (!why.length) why.push("没有明确新增催化，更多像日常波动。");
 
   const watch = [];
   if (strongPrice || strongVolume) watch.push("先看价格异动是否能被披露、评级、财报或板块变化解释。");

@@ -8,6 +8,14 @@
 
 每天早上不想在新闻流、行情页和披露网站之间来回切。QVeris Pulse 的目标是把「昨晚发生了什么」「自选股有什么变化」「今天该复核什么」压缩到一页。
 
+## 界面预览
+
+![QVeris Pulse dashboard](assets/hero-dashboard.png)
+
+![Watchlist signals](assets/watchlist-signals.png)
+
+![Ticker detail](assets/ticker-detail.png)
+
 ## 功能
 
 - 市场概览：SPY、QQQ、DIA、10Y 美债。

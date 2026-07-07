@@ -244,7 +244,8 @@ function buildJudgment(symbol, dayPct, volumeRatio, earningsRows, filingsRows, a
 
 async function qverisExecute(toolId, parameters) {
   if (!QVERIS_KEY) return null;
-  usageProbe?.calls.push({ toolId, parameters });
+  const usageCall = { toolId, parameters, credits: 1 };
+  usageProbe?.calls.push(usageCall);
   const res = await fetchWithTimeout(`${QVERIS_BASE}/tools/execute`, {
     method: "POST",
     headers: { Authorization: `Bearer ${QVERIS_KEY}`, "Content-Type": "application/json" },
@@ -252,6 +253,7 @@ async function qverisExecute(toolId, parameters) {
   });
   if (!res.ok) return null;
   const payload = await res.json();
+  usageCall.credits = Number(payload.billing?.list_amount_credits ?? payload.billing?.price?.amount_credits ?? 1);
   if (!payload?.success) return null;
   if (payload.result?.data !== undefined) return payload.result.data;
   if (payload.result?.full_content_file_url) {
@@ -327,20 +329,18 @@ async function secFilings(symbol) {
     const data = await qverisExecute(QVERIS_FMP_FILINGS_TOOL, { symbol }).catch(() => null);
     const rows = Array.isArray(data) ? data : data?.data || data?.filings || [];
     if (!Array.isArray(rows) || !rows.length) return { source: null, items: [] };
-    return {
-      source: "qveris:fmp-filings",
-      items: rows.slice(0, 8).map((r) => ({
-        form: r.formType || r.form || r.type,
-        date: r.fillingDate || r.filingDate || r.date,
-        url: r.finalLink || r.link || r.url,
-      })),
-    };
+    const items = rows.slice(0, 8).map((r) => ({
+      form: r.formType || r.form || r.type,
+      date: r.fillingDate || r.filingDate || r.date,
+      url: r.finalLink || r.link || r.url,
+    })).filter((r) => r.form && r.date);
+    return { source: items.length ? "qveris:fmp-filings" : null, items };
   });
 }
 
 async function macroSnapshot() {
   return cached("macro", 6 * 60 * 60 * 1000, async () => {
-    const ids = ["DGS10", "DTWEXBGS", "CPIAUCSL", "PPIACO"];
+    const ids = ["DGS10", "CPIAUCSL", "PPIACO"];
     const rows = await Promise.all(ids.map(async (series_id) => {
       const data = await qverisExecute(QVERIS_FRED_OBSERVATIONS_TOOL, { series_id, file_type: "json", sort_order: "desc", limit: 7 }).catch(() => null);
       const observations = data?.observations || data?.seriess || data?.data || [];
@@ -580,8 +580,8 @@ function summarizeUsage(calls) {
   for (const c of calls) byTool[c.toolId] = (byTool[c.toolId] || 0) + 1;
   return {
     toolCalls: calls.length,
-    estimatedCredits: calls.length,
-    note: "按每次 QVeris tool execute 约 1 credit 估算；实际扣费以 QVeris 后台为准。缓存命中不计入本次数。",
+    estimatedCredits: calls.reduce((sum, c) => sum + (Number(c.credits) || 0), 0),
+    note: "优先使用 QVeris 返回的 billing credits；缓存命中不计入本次数。",
     byTool,
   };
 }
