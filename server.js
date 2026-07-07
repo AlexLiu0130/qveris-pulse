@@ -417,7 +417,7 @@ async function dailyReport(symbols = ["NVDA", "AMD", "MU", "AVGO", "MSFT", "META
   const notable = [...moversUp, ...moversDown];
   const earningsCalendar = buildEarningsCalendar(watchlist);
   const focusChecklist = buildFocusChecklist(watchlist, moversUp, moversDown, earningsCalendar);
-  const fallbackJudgment = buildReportJudgment(market, flow, watchlist, moversUp, moversDown);
+  const fallbackJudgment = buildReportJudgment(market, flow, watchlist, moversUp, moversDown, earningsCalendar);
   const qverisJudgment = await deepseekReportJudgment(market, flow, watchlist, moversUp, moversDown, earningsCalendar).catch(() => null) || fallbackJudgment;
   const qverisUsage = summarizeUsage(usage.calls);
   return {
@@ -481,18 +481,21 @@ function buildFocusChecklist(watchlist, moversUp, moversDown, earningsCalendar) 
   return checks.slice(0, 6);
 }
 
-function buildReportJudgment(market, flow, watchlist, moversUp, moversDown) {
+function buildReportJudgment(market, flow, watchlist, moversUp, moversDown, earningsCalendar = []) {
   const leaders = flow.winners.slice(0, 3).map((s) => `${s.symbol} ${s.dayPct.toFixed(2)}%`).join("、") || "暂无";
   const laggards = flow.losers.slice(0, 3).map((s) => `${s.symbol} ${s.dayPct.toFixed(2)}%`).join("、") || "暂无";
   const strongest = [...moversUp, ...moversDown].sort((a, b) => Math.abs(b.dayPct ?? 0) - Math.abs(a.dayPct ?? 0))[0];
-  const watch = watchlist.slice(0, 3).map((t) => `${t.symbol} ${pctText(t.dayPct)}、量能${ratioText(t.volumeRatio)}`).join("；") || "自选股暂无有效数据";
+  const heavySectors = (flow.items || [...flow.winners, ...flow.losers]).filter((s) => (s.volumeRatio ?? 0) >= 1.2).map((s) => `${s.symbol} ${ratioText(s.volumeRatio)}`).join("、") || "暂无明显放量板块";
+  const watch = watchlist.slice(0, 4).map((t) => `${t.symbol} ${pctText(t.dayPct)}、量能${ratioText(t.volumeRatio)}`).join("；") || "自选股暂无有效数据";
+  const earnings = earningsCalendar.slice(0, 3).map((e) => `${e.symbol} ${e.date}${e.hour ? ` ${e.hour}` : ""}`).join("；") || "未来窗口内暂无自选股财报";
+  const marketText = market.items?.map((a) => `${a.name} ${pctText(a.dayPct)}${a.weekPct != null ? `、周${pctText(a.weekPct)}` : ""}`).join("；") || "市场数据暂缺";
   return {
-    main: `截至 ${market.asOfDate || "最新完整收盘日"}，市场主线是领涨 ${leaders}，领跌 ${laggards}。如果成长板块和防御板块同时走强，说明风险偏好并不单一，需要把反弹和避险买盘分开看。`,
-    macro: macroLine(market),
-    sector: `板块层面，强弱排序先看涨跌幅，再看量能是否高于 20 日均量。当前领涨与领跌差异较大，说明资金不是全面普涨，而是在少数方向上集中。`,
-    stock: `个股层面，自选股重点为：${watch}。涨跌幅超过 3% 或量能超过 1.3x 的标的，应优先核对披露、财报和评级是否能解释波动。`,
-    risk: "当前判断只基于结构化行情、披露、财报、评级和宏观数据生成，不构成买卖建议。若价格与基本面线索方向不一致，优先把它当作待验证信号，而不是结论。",
-    next: strongest ? `下一步优先复核 ${strongest.symbol}：当日${strongest.dayPct >= 0 ? "上涨" : "下跌"} ${Math.abs(strongest.dayPct ?? 0).toFixed(2)}%，量能${ratioText(strongest.volumeRatio)}，确认是公司披露、财报预期、板块联动还是单纯价格波动。` : "等待自选股出现价格、量能、财报或披露共振信号。",
+    main: `截至 ${market.asOfDate || "最新完整收盘日"}，大盘结构为：${marketText}。主线不是单纯指数涨跌，而是领涨 ${leaders}、领跌 ${laggards} 的分化格局；这说明资金更像在做方向选择，而不是无差别加仓。`,
+    macro: `${macroLine(market)} 如果利率继续上行，成长股估值会更依赖业绩和指引来消化压力；如果利率稳定，资金会更愿意回到 AI、软件和高 beta 方向。`,
+    sector: `板块层面，强弱排序先看涨跌幅，再看量能是否高于 20 日均量。当前放量线索：${heavySectors}；若领涨板块没有放量，说明上涨更像情绪修复，若领跌板块放量，则需要警惕资金主动撤出。`,
+    stock: `个股层面，自选股重点为：${watch}。涨跌幅超过 3% 但量能不足 1.3x 的标的，先按“价格先动、确认不足”处理；涨跌幅和量能同时放大的标的，才优先进入复核队列。`,
+    risk: `当前判断只基于结构化行情、披露、财报、评级和宏观数据生成，不构成买卖建议。财报窗口：${earnings}；如果价格异动缺少披露、评级或财报预期配合，不要把它直接解释成基本面变化。`,
+    next: strongest ? `下一步优先复核 ${strongest.symbol}：当日${strongest.dayPct >= 0 ? "上涨" : "下跌"} ${Math.abs(strongest.dayPct ?? 0).toFixed(2)}%，量能${ratioText(strongest.volumeRatio)}。复核顺序：先看是否跟随所属板块，再看披露/评级/财报日历，最后判断是公司事件、预期变化还是单纯价格波动。` : "等待自选股出现价格、量能、财报或披露共振信号。",
     source: "structured-fallback",
   };
 }
@@ -517,7 +520,7 @@ async function deepseekReportJudgment(market, flow, watchlist, moversUp, moversD
     const content = await deepseekJson([
       {
         role: "system",
-        content: "你是 QVeris 的中文金融日报分析器。请像专业投研晨报一样，从宏观、板块、个股、风险和下一步验证五个角度做归纳。输出必须是 JSON 对象，字段为 main、macro、sector、stock、risk、next，每个字段 2-4 句中文。不要输出 markdown。",
+        content: "你是 QVeris 的中文金融日报分析器。请像专业投研晨报一样，从宏观、板块、个股、风险和下一步验证五个角度做归纳。输出必须是 JSON 对象，字段为 main、macro、sector、stock、risk、next。每个字段 3-5 句中文：先给结论，再解释为什么，最后给需要验证的线索。不要输出 markdown，不要给买卖建议，不要编造输入里没有的数据。",
       },
       { role: "user", content: JSON.stringify(payload) },
     ]).catch(() => null);
@@ -530,7 +533,7 @@ async function deepseekJson(messages) {
   const res = await fetchWithTimeout(`${OPENAI_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: OPENAI_MODEL, messages, temperature: 0.2, max_tokens: 1400 }),
+    body: JSON.stringify({ model: OPENAI_MODEL, messages, temperature: 0.2, max_tokens: 2200 }),
   });
   if (!res.ok) throw new Error(`DeepSeek ${res.status}`);
   const data = await res.json();
